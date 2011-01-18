@@ -1,0 +1,28 @@
+# Django Facebook Integration
+Facebook integration with Django using the Javascript SDK.
+
+**Built by Derek Payton for [Web Cube CMS][1].**
+
+*Version: 0.1a*
+
+*License: MIT*
+
+*Requirements:*
+
+  - [Django][2] (1.2-ish, untested with 1.1)
+  - [python-facebook-sdk][3] (0.1)
+  - [django-registration][4] (recent checkout, **not** 0.7 on PyPI)
+
+----------
+
+##Overview
+
+This app was inspired by (and uses a small bit of code from) [django-facebook][5], and aims to be a more pluggable way to integrate with Facebook. Allowing for custom and override-able backends allow you to connect with Facebook on your own terms without having to write everything from scratch.
+
+
+
+  [1]: http://www.webcubecms.com
+  [2]: http://www.djangoproject.com
+  [3]: https://github.com/facebook/python-sdk
+  [4]: https://bitbucket.org/ubernostrum/django-registration/
+  [5]: https://github.com/tschellenbach/Django-facebook
