@@ -32,8 +32,14 @@ class DefaultBackend(object):
                         ## us, but is not currently logged in.
                         return self._login_user()
                     else:
-                        ## User does not have an account with us, so create one.
-                        return self._register_user()
+                        try:
+                            ## Check to see if there is a none-FB user for this
+                            ## email address. If so, display an 'Oops' page.
+                            User.objects.get(email=self.facebook.profile['email'])
+                            return self._account_conflict()
+                        except User.DoesNotExist:
+                            ## User does not have an account with us, so create one.
+                            return self._register_user()
         return render_to_response('django_fbi/connect.html', {
             }, context_instance=RequestContext(self.request))
 
@@ -83,6 +89,10 @@ class DefaultBackend(object):
         ''' Register the user '''
         ## TODO: Build this out using django-registration
         return self._next_redirect()
+
+    def _account_conflict(self):
+        return render_to_response('django_fbi/account_conflict.html', {
+            }, context_instance=RequestContext(self.request))
 
     def _connect_user(self):
         ''' Connect the users facebook account to this site. '''
