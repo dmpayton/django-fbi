@@ -7,6 +7,13 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django_fbi.user import FacebookUser
+from django_fbi.utils import get_facebook_settings
+
+try:
+    from configstore.configs import get_config
+    use_configstore = True
+except ImprotError:
+    use_configstore = False
 
 class DefaultBackend(object):
     def __init__(self):
@@ -15,6 +22,8 @@ class DefaultBackend(object):
         self.facebook = None
         self.facebook_fields = ['facebook_id', 'first_name', 'last_name', 'email']
         self.facebook_fields.extend(getattr(settings, 'FACEBOOK_PROFILE_FIELDS', []))
+        self.FACEBOOK_APP_ID, self.FACEBOOK_APP_SECRET = get_facebook_settings()
+
 
     def connect(self, request):
         self.request = request
@@ -47,8 +56,8 @@ class DefaultBackend(object):
         '''  '''
         user = facebook.get_user_from_cookie(
             self.request.COOKIES,
-            settings.FACEBOOK_APP_ID,
-            settings.FACEBOOK_APP_SECRET
+            self.FACEBOOK_APP_ID,
+            self.FACEBOOK_APP_SECRET
             )
         return FacebookUser(user)
 
