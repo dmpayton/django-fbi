@@ -1,6 +1,7 @@
 import facebook
 from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import get_model
 from django.http import HttpResponse, HttpResponseRedirect
