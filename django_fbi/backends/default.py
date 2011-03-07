@@ -21,7 +21,7 @@ class DefaultBackend(object):
         self.request = None
         self.user = None
         self.facebook = None
-        self.facebook_fields = ['facebook_id', 'first_name', 'last_name', 'email']
+        self.facebook_fields = ['facebook_id', 'first_name', 'last_name']
         self.facebook_fields.extend(getattr(settings, 'FACEBOOK_PROFILE_FIELDS', []))
         self.FACEBOOK_APP_ID, self.FACEBOOK_APP_SECRET = get_facebook_settings()
 
@@ -32,24 +32,14 @@ class DefaultBackend(object):
         if 'do_login' in self.request.REQUEST:
             self.facebook = self._get_facebook_user()
             if self.facebook.is_authenticated():
+                self._authenticate_user()
                 if self.user.is_authenticated():
-                    ## User is auth'd with both facebook and us. Connect 'em.
-                    return self._connect_user()
+                    ## User is auth'd with facebook and has an account with
+                    ## us, but is not currently logged in.
+                    return self._login_user()
                 else:
-                    self._authenticate_user()
-                    if self.user.is_authenticated():
-                        ## User is auth'd with facebook and has an account with
-                        ## us, but is not currently logged in.
-                        return self._login_user()
-                    else:
-                        try:
-                            ## Check to see if there is a none-FB user for this
-                            ## email address. If so, display an 'Oops' page.
-                            User.objects.get(email=self.facebook.profile['email'])
-                            return self._account_conflict()
-                        except User.DoesNotExist:
-                            ## User does not have an account with us, so create one.
-                            return self._register_user()
+                    ## User does not have an account with us, so create one.
+                    return self._register_user()
         return render_to_response('django_fbi/connect.html', {
             }, context_instance=RequestContext(self.request))
 
@@ -80,10 +70,7 @@ class DefaultBackend(object):
 
     def _authenticate_user(self):
         ''' Try to authenticate a user, set self.user if success '''
-        kwargs = {'facebook_id': self.facebook.profile['id']}
-        if self.facebook.profile.get('email') and self.facebook.profile.get('verified'):
-            kwargs['facebook_email'] = self.facebook.profile['email']
-        auth_user = authenticate(**kwargs)
+        auth_user = authenticate(facebook_id=self.facebook.profile['id'])
         if auth_user:
             self.user = auth_user
         return auth_user
