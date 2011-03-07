@@ -31,6 +31,8 @@ class DefaultBackend(object):
         self.user = self.request.user
         if 'do_login' in self.request.REQUEST:
             self.facebook = self._get_facebook_user()
+            if not self.facebook:
+                return self._next_redirect()
             if self.facebook.is_authenticated():
                 self._authenticate_user()
                 if self.user.is_authenticated():
@@ -50,6 +52,8 @@ class DefaultBackend(object):
             self.FACEBOOK_APP_ID,
             self.FACEBOOK_APP_SECRET
             )
+        if not user:
+            return None
         return FacebookUser(user)
 
     def _get_user_profile(self):
