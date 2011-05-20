@@ -5,7 +5,7 @@ from django.db.models import get_model
 try:
     from configstore.configs import get_config
     use_configstore = True
-except ImprotError:
+except ImportError:
     use_configstore = False
 
 def get_user_profile(user):
