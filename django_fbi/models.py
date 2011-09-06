@@ -8,9 +8,8 @@ class FacebookAccount(models.Model):
     user = models.OneToOneField(User, blank=True, null=True, related_name='facebook')
     facebook_id = models.BigIntegerField(unique=True)
     facebook_email = models.EmailField(max_length=255, blank=True, null=True)
-    connected = models.BooleanField(default=False)
     access_token = models.TextField(blank=True, null=True)
-    api_data = models.TextField()
+    api_data = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ('user',)
@@ -30,6 +29,10 @@ class FacebookAccount(models.Model):
     def profile(self, data):
         self._profile = data
         self.api_data = json.dumps(data)
+
+    @property
+    def connected(self):
+        return bool(self.access_token)
 
     def refresh_profile(self, profile=None):
         if self.access_token and not self.profile:

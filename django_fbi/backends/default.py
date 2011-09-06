@@ -20,7 +20,8 @@ class DefaultBackend(object):
         self.facebook = None
         self.user = None
 
-    def authenticate(self, facebook_id=None, facebook_email=None):
+    def authenticate(self):
+        ''' Authenticate the request and return the appropriate user. '''
         self.facebook = facebook.get_user_from_cookie(
             self.request.COOKIES,
             self.FACEBOOK_APP_ID,
@@ -30,7 +31,7 @@ class DefaultBackend(object):
         return self.user
 
     def redirect(self):
-        ''' Return an HttpResponseRedirect to the next url '''
+        ''' Return an HttpResponseRedirect to the next url. '''
         url = self.request.REQUEST.get('next') or '/'
         return HttpResponseRedirect(url)
 
@@ -38,16 +39,22 @@ class DefaultBackend(object):
         ''' Pinged by Facebook when a user removes the app. '''
         account = FacebookAccount.objects.get(facebook_id=request.fbdata['user_id'])
         account.access_token = None
-        account.connected = False
         account.save()
         facebook_deauthorize.send(sender=FacebookAccount, account=account)
         return HttpResponse('OK')
 
     def connect(self):
         ''' Authenticate '''
+        if self.user and self.user.is_authenticated():
+            ## Already logged in, nothing to do here.
+            return self.redirect()
         self.authenticate()
         if self.user:
-            return self.do_login()
+            if not self.user.facebook.connected:
+                ## We have a user but were previously de-authed.
+                self.user.facebook.access_token = self.facebook['access_token']
+                self.user.facebook.save()
+            return self.do_login(refresh_profile=True)
         return self.do_connect()
 
     def do_login(self, refresh_profile=True):
@@ -58,11 +65,11 @@ class DefaultBackend(object):
         if refresh_profile:
             self.user.facebook.refresh_profile()
             self.user.facebook.save()
-        facebook_login.send(sender=FacebookAccount, account=user.facebook)
+        facebook_login.send(sender=FacebookAccount, account=self.user.facebook)
         return self.redirect()
 
     def do_connect(self):
-        ''' Create the user account and hook it up to the profile '''
+        ''' Create the user account and hook it up to the profile. '''
         graph = facebook.GraphAPI(self.facebook['access_token'])
         fbuser = graph.get_object('me')
         self.user = User(
