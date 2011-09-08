@@ -1,3 +1,4 @@
+import facebook
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django_fbi.models import FacebookApp
@@ -10,7 +11,11 @@ def facebook_request(view_func):
         if request.REQUEST.get('signed_request'):
             connect = FacebookApp.objects.connect()
             try:
-                data = parse_signed_request(str(request.REQUEST['signed_request']), str(connect.app_secret))
+                ## Does not play well with Unicode strings.
+                data = facebook.parse_signed_request(
+                    str(request.REQUEST['signed_request']),
+                    str(connect['app_secret'])
+                    )
                 if not data:
                     data = {}
             except Exception, err:

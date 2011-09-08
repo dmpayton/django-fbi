@@ -1,5 +1,4 @@
 from django.core.exceptions import ImproperlyConfigured
-from django_fbi.models import FacebookApp
 try:
     from threading import local
 except ImportError:
@@ -9,6 +8,7 @@ _thread_locals = local()
 
 class FacebookConnectMiddleware(object):
     def process_request(self, request):
+        from django_fbi.models import FacebookApp
         _thread_locals.request = request
         try:
             _thread_locals.connect = FacebookApp.objects.connect()

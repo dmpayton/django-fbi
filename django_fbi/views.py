@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django_fbi.app import apps
 from django_fbi.backends import get_backend
@@ -7,6 +8,9 @@ from django_fbi.models import FacebookAccount
 from django_fbi.signals import facebook_deauthorize
 
 FBI_BACKEND = getattr(settings, 'FBI_BACKEND', 'django_fbi.backends.DefaultBackend')
+
+def channel(request):
+    return HttpResponse('<script src="//connect.facebook.net/en_US/all.js"></script>')
 
 @facebook_request
 def connect(request):
@@ -24,7 +28,7 @@ def view_app(request, slug, page):
         ## Check the registry to see if we have Python app.
         app = apps[slug]
         return getattr('%s_view' % page, app)(request)
-    except (AttributeError, KeyError):
+    except (KeyError, NotImplemented):
         ## Nothing registered, check the database.
         app = get_object_or_404(FacebookApp, namespace=slug)
         context = RequestContext(request, {'app': app})

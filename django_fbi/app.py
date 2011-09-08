@@ -1,10 +1,10 @@
 
 class FacebookApp(object):
     def canvas_view(self, request):
-        pass
+        raise NotImplemented
 
     def tab_view(self, request):
-        pass
+        raise NotImplemented
 
 class AppRegistry(dict):
     def register(self, app):

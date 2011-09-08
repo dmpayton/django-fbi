@@ -14,8 +14,8 @@ from django_fbi.signals import facebook_connect, facebook_login, facebook_deauth
 class DefaultBackend(object):
     def __init__(self, request):
         connect = FacebookApp.objects.connect()
-        self.FACEBOOK_APP_ID = connect.app_id
-        self.FACEBOOK_APP_SECRET = connect.app_secret
+        self.FACEBOOK_APP_ID = connect['app_id']
+        self.FACEBOOK_APP_SECRET = connect['app_secret']
         self.request = request
         self.facebook = None
         self.user = None
@@ -27,7 +27,12 @@ class DefaultBackend(object):
             self.FACEBOOK_APP_ID,
             self.FACEBOOK_APP_SECRET
             )
-        self.user = authenticate(facebook_id=self.facebook['uid'])
+        print self.facebook
+        if not self.facebook:
+            ## No Facebook info? Don't even auth, just return False
+            return False
+        self.user = authenticate(facebook_id=self.facebook.get('uid'))
+        print self.user
         return self.user
 
     def redirect(self):
@@ -45,13 +50,13 @@ class DefaultBackend(object):
 
     def connect(self):
         ''' Authenticate '''
-        if self.user and self.user.is_authenticated():
+        ## If we're already logged in or no facebook auth data provided, redirect
+        if (self.user and self.user.is_authenticated) or (self.authenticate() == False):
             ## Already logged in, nothing to do here.
             return self.redirect()
-        self.authenticate()
         if self.user:
             if not self.user.facebook.connected:
-                ## We have a user but were previously de-authed.
+                ## We have a user but were previously de-authed, so save the token
                 self.user.facebook.access_token = self.facebook['access_token']
                 self.user.facebook.save()
             return self.do_login(refresh_profile=True)
@@ -73,7 +78,7 @@ class DefaultBackend(object):
         graph = facebook.GraphAPI(self.facebook['access_token'])
         fbuser = graph.get_object('me')
         self.user = User(
-            username='FB_%s' % self.facebook['uid'],
+            username='FB_%s' % self.facebook.get('uid'),
             first_name=fbuser.get('first_name', ''),
             last_name=fbuser.get('last_name', ''),
             )
@@ -81,7 +86,7 @@ class DefaultBackend(object):
         self.user.save()
         account = FacebookAccount(
             user=self.user,
-            facebook_id=self.facebook['uid'],
+            facebook_id=self.facebook.get('uid'),
             access_token=self.facebook['access_token']
             )
         account.refresh_profile(fbuser)
