@@ -12,7 +12,7 @@ class FacebookAppManager(models.Manager):
         except AttributeError:
             ## It's not cached in _thread_locals, look it up.
             try:
-                return self.model.objects.values('app_id', 'app_secret').get(connect=True)
+                return self.model.objects.values('app_id', 'app_secret', 'scope').get(connect=True)
             except (self.model.DoesNotExist):
                 raise ImproperlyConfigured('No Facebook app is setup for Connect.')
             except (self.model.MultipleObjectsReturned):

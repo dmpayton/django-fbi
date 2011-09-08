@@ -12,15 +12,15 @@ FBI_BACKEND = getattr(settings, 'FBI_BACKEND', 'django_fbi.backends.DefaultBacke
 def channel(request):
     return HttpResponse('<script src="//connect.facebook.net/en_US/all.js"></script>')
 
-@facebook_request
+#@facebook_request
 def connect(request):
     facebook_backend = get_backend(FBI_BACKEND)
-    return facebook_backend(request).connect()
+    return facebook_backend(request).connect_view()
 
 @facebook_request
 def deauthorize(request):
     facebook_backend = get_backend(FBI_BACKEND)
-    return facebook_backend(request).deauthorize()
+    return facebook_backend(request).deauthorize_view()
 
 @facebook_request
 def view_app(request, slug, page):

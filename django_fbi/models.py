@@ -1,3 +1,4 @@
+import datetime
 import facebook
 from django.contrib.auth.models import User
 from django.db import models
@@ -9,6 +10,7 @@ class FacebookAccount(models.Model):
     facebook_id = models.BigIntegerField(unique=True)
     facebook_email = models.EmailField(max_length=255, blank=True, null=True)
     access_token = models.TextField(blank=True, null=True)
+    expires = models.DateTimeField(blank=True, null=True)
     api_data = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -32,7 +34,16 @@ class FacebookAccount(models.Model):
 
     @property
     def connected(self):
-        return bool(self.access_token)
+        return self.access_token and not self.is_expired
+
+    @property
+    def is_expired(self):
+        now = datetime.utcnow()
+        return self.expires > now
+
+    def expire_in(self, seconds):
+        now = datetime.utcnow()
+        self.expires = now + datetime.timedelta(seconds=seconds)
 
     def refresh_profile(self, profile=None):
         if self.access_token and not self.profile:
@@ -54,7 +65,7 @@ class FacebookApp(models.Model):
     connect = models.BooleanField(default=False, help_text='Only one app may be used for Facebook Connect.')
     app_id = models.CharField(max_length=20)
     app_secret = models.CharField(max_length=32)
-    permissions = models.CharField(max_length=255, blank=True, null=True)
+    scope = models.CharField(max_length=255, blank=True, null=True)
     canvas_template = models.CharField(max_length=255, blank=True, null=True)
     canvas_content = models.TextField(blank=True, null=True)
     tab_template = models.CharField(max_length=255, blank=True, null=True)

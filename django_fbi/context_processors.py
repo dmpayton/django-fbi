@@ -1,14 +1,20 @@
+import urllib
 from django_fbi.models import FacebookApp
+from django_fbi.utils import auth_dialog_url
 
 def facebook_app(request):
     try:
         connect = FacebookApp.objects.connect()
-        app_id = connect['app_id']
-        perms = connect.permissions
-    except Exception:
-        app_id = None
-        perms = None
-    return {
-        'FACEBOOK_APP_ID': app_id,
-        'FACEBOOK_PERMISSIONS': perms
-        }
+        context = {
+            'FACEBOOK_APP_ID': connect['app_id'],
+            'FACEBOOK_AUTH_SCOPE': connect['scope'],
+            'FACEBOOK_AUTH_URL': auth_dialog_url(request)
+            }
+    except Exception, err:
+        print err
+        context = {
+            'FACEBOOK_APP_ID': None,
+            'FACEBOOK_AUTH_SCOPE': None,
+            'FACEBOOK_AUTH_URL': None,
+            }
+    return context

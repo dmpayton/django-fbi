@@ -33,7 +33,7 @@ class FacebookAppAdmin(admin.ModelAdmin):
             'fields': ('namespace', 'connect')
         }),
         ('App Credentials', {
-            'fields': ('app_id', 'app_secret', 'permissions')
+            'fields': ('app_id', 'app_secret', 'scope')
         }),
         ('Canvas Page', {
             'fields': ('canvas_template', 'canvas_content')
