@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render_to_response
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django_fbi.app import apps
 from django_fbi.backends import get_backend
@@ -15,11 +16,13 @@ def channel(request):
 def connect(request):
     facebook_backend = get_backend(FBI_BACKEND)
     return facebook_backend(request).connect_view()
+connect = never_cache(connect)
 
 def deauthorize(request):
     facebook_backend = get_backend(FBI_BACKEND)
     return facebook_backend(request).deauthorize_view()
 deauthorize = csrf_exempt(deauthorize)
+deauthorize = never_cache(deauthorize)
 
 def view_app(request, slug, page):
     try:
