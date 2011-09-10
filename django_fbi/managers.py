@@ -4,7 +4,7 @@ from django_fbi.middleware import _thread_locals
 
 class FacebookAppManager(models.Manager):
     def connect(self):
-        ''' Return a dict of app_id, app_secret with the settings used for Facebook Connect '''
+        ''' Return a dict of app_id, app_secret, scope with the settings used for Facebook Connect '''
         try:
             ## If we're in a request/response cycle and the middleware
             ## is installed, we should already have the app.

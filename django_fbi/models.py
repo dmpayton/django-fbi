@@ -7,11 +7,11 @@ from django_fbi.managers import FacebookAppManager
 
 class FacebookAccount(models.Model):
     user = models.OneToOneField(User, blank=True, null=True, related_name='facebook')
-    facebook_id = models.BigIntegerField(unique=True)
+    facebook_id = models.BigIntegerField(unique=True, db_index=True)
     facebook_email = models.EmailField(max_length=255, blank=True, null=True)
     access_token = models.TextField(blank=True, null=True)
     expires = models.DateTimeField(blank=True, null=True)
-    api_data = models.TextField(blank=True, null=True)
+    profile_data = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ('user',)
@@ -19,42 +19,53 @@ class FacebookAccount(models.Model):
     def __unicode__(self):
         return unicode(self.facebook_id)
 
-    @property
-    def profile(self):
+    def graph(self):
+        ''' Shortcut to get a GraphAPI object for this account '''
+        if not hasattr(self, '_graph'):
+            self._graph = facebook.GraphAPI(self.access_token)
+        return self.graph
+    graph = property(graph)
+
+    def get_profile(self):
         if not hasattr(self, '_profile'):
             self._profile = {}
-            if self.api_data:
-                self._profile = json.loads(self.api_data)
+            if self.profile_data:
+                self._profile = json.loads(self.profile_data)
         return self._profile
 
-    @profile.setter
-    def profile(self, data):
+    def set_profile(self, data):
         self._profile = data
-        self.api_data = json.dumps(data)
+        self.profile_data = json.dumps(data)
 
-    @property
+    profile = property(get_profile, set_profile)
+
     def connected(self):
-        return self.access_token and not self.is_expired
+        ''' Determine if we are connected and have an active token. '''
+        return self.access_token and not self.is_expired()
+    connected = property(connected)
 
-    @property
     def is_expired(self):
-        now = datetime.utcnow()
+        ''' Compare self.expires to now to determine if the token has expired. '''
+        now = datetime.datetime.utcnow()
         return self.expires > now
 
     def expire_in(self, seconds):
-        now = datetime.utcnow()
-        self.expires = now + datetime.timedelta(seconds=seconds)
+        ''' Update self.expires to now+seconds. '''
+        now = datetime.datetime.utcnow()
+        self.expires = now + datetime.timedelta(seconds=int(seconds))
 
     def refresh_profile(self, profile=None):
+        ''' Cache the users /me profile for potential offline use. '''
         if self.access_token and not self.profile:
             try:
-                graph = facebook.GraphAPI(self.access_token)
-                profile = graph.get_object('me')
+                profile = self.graph.get_object('me')
             except facebook.GraphAPIError:
                 return False
         if profile:
             profile['image'] = 'https://graph.facebook.com/%s/picture?type=large' % self.facebook_id
             profile['image_thumb'] = 'https://graph.facebook.com/%s/picture' % self.facebook_id
+            if profile.get('email'):
+                self.facebook_email = profile['email']
             self.profile = profile
             return True
         return False
