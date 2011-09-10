@@ -1,31 +1,15 @@
 from django import forms
 from django.contrib import admin
-from django.template import loader
-from django.template.base import TemplateDoesNotExist
+from django_fbi.forms import FacebookAppAdminForm
 from django_fbi.models import FacebookApp, FacebookAccount
 
-class FacebookAppForm(forms.ModelForm):
+class FacebookAccountAdmin(admin.ModelAdmin):
+    list_display = ('facebook_id', 'facebook_email', 'connected')
+    list_filter = ('user__is_staff', 'user__is_superuser', 'user__is_active', 'user__date_joined',)
 
-    def _validate_template(self, template):
-        if template:
-            try:
-                loader.find_template(template)
-            except TemplateDoesNotExist:
-                raise forms.ValidationError('Template does not exist.')
-            return True
-
-    def clean_canvas_template(self):
-        template = self.cleaned_data.get('canvas_template')
-        self._validate_template(template)
-        return template
-
-    def clean_tab_template(self):
-        template = self.cleaned_data.get('tab_template')
-        self._validate_template(template)
-        return template
-
-    class Meta:
-        model = FacebookApp
+    def connected(self, instance):
+        return bool(instance.connected)
+    connected.boolean = True
 
 class FacebookAppAdmin(admin.ModelAdmin):
     fieldsets = (
@@ -42,9 +26,9 @@ class FacebookAppAdmin(admin.ModelAdmin):
             'fields': ('tab_template', 'tab_content')
         }),
     )
-    form = FacebookAppForm
+    form = FacebookAppAdminForm
     list_display = ('namespace', 'app_id', 'connect')
     list_editable = ('connect',)
 
 admin.site.register(FacebookApp, FacebookAppAdmin)
-admin.site.register(FacebookAccount)
+admin.site.register(FacebookAccount, FacebookAccountAdmin)

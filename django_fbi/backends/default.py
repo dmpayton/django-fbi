@@ -56,7 +56,6 @@ class DefaultBackend(object):
             str(self.request.REQUEST['signed_request']),
             str(self.connect['app_secret'])
             )
-        print data
         account = FacebookAccount.objects.get(facebook_id=data['user_id'])
         account.access_token = None
         account.expires = None
@@ -90,6 +89,7 @@ class DefaultBackend(object):
             self.authenticate()
         login(self.request, self.user)
         self.user.facebook.refresh_profile(self.profile)
+        self.user.facebook.access_token = self.token['access_token']
         self.user.facebook.expire_in(self.token['expires']) ## Update the expires time
         self.user.facebook.save()
         facebook_login.send(sender=FacebookAccount, account=self.user.facebook)
@@ -113,7 +113,6 @@ class DefaultBackend(object):
         account = FacebookAccount(
             user=self.user,
             facebook_id=self.profile['id'],
-            access_token=self.access_token
             )
         account.save()
         return account
