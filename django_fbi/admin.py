@@ -14,10 +14,10 @@ class FacebookAccountAdmin(admin.ModelAdmin):
 class FacebookAppAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ('namespace', 'connect')
+            'fields': ('namespace',)
         }),
         ('App Credentials', {
-            'fields': ('app_id', 'app_secret', 'scope')
+            'fields': ('app_id', 'app_secret')
         }),
         ('Canvas Page', {
             'fields': ('canvas_template', 'canvas_content')
@@ -27,8 +27,7 @@ class FacebookAppAdmin(admin.ModelAdmin):
         }),
     )
     form = FacebookAppAdminForm
-    list_display = ('namespace', 'app_id', 'connect')
-    list_editable = ('connect',)
+    list_display = ('namespace', 'app_id')
 
 admin.site.register(FacebookApp, FacebookAppAdmin)
 admin.site.register(FacebookAccount, FacebookAccountAdmin)

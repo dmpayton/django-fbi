@@ -11,12 +11,12 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django_fbi.models import FacebookAccount, FacebookApp
 from django_fbi.signals import facebook_connect, facebook_login, facebook_deauthorize
-from django_fbi.utils import auth_dialog_url, auth_token_url
+from django_fbi.utils import app_credentials, auth_dialog_url, auth_token_url
 
 
 class DefaultBackend(object):
     def __init__(self, request):
-        self.connect = FacebookApp.objects.connect()
+        self.connect = app_credentials()
         self.request = request
         self.access_token = None
         self.profile = None
@@ -42,6 +42,7 @@ class DefaultBackend(object):
     def next_redirect(self):
         ''' Return an HttpResponseRedirect to the next url. '''
         url = self.request.REQUEST.get('next') or '/'
+        print 'REDIRECT:', url
         return HttpResponseRedirect(url)
 
     def dialog_redirect(self):
