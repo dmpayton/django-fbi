@@ -42,7 +42,6 @@ class DefaultBackend(object):
     def next_redirect(self):
         ''' Return an HttpResponseRedirect to the next url. '''
         url = self.request.REQUEST.get('next') or '/'
-        print 'REDIRECT:', url
         return HttpResponseRedirect(url)
 
     def dialog_redirect(self):
@@ -84,15 +83,13 @@ class DefaultBackend(object):
         return self.create_user() ## No user, so it's a new registration
 
 
-    def login_user(self):
+    def login_user(self, update=True):
         ''' Login the current user. '''
         if not hasattr(self.user, 'backend'):
             self.authenticate()
         login(self.request, self.user)
-        self.user.facebook.refresh_profile(self.profile)
-        self.user.facebook.access_token = self.token['access_token']
-        self.user.facebook.expire_in(self.token['expires']) ## Update the expires time
-        self.user.facebook.save()
+        if update:
+            self.update_account()
         facebook_login.send(sender=FacebookAccount, account=self.user.facebook)
         return self.next_redirect()
 
@@ -105,9 +102,16 @@ class DefaultBackend(object):
             )
         self.user.set_unusable_password()
         self.user.save()
-        account = self.create_account()
-        facebook_connect.send(sender=FacebookAccount, account=account)
-        return self.login_user()
+        self.user.facebook = self.create_account()
+        self.update_account()
+        facebook_connect.send(sender=FacebookAccount, account=self.user.facebook)
+        return self.login_user(update=False)
+
+    def update_account(self):
+        self.user.facebook.refresh_profile(self.profile)
+        self.user.facebook.access_token = self.token['access_token']
+        self.user.facebook.expire_in(self.token['expires']) ## Update the expires time
+        self.user.facebook.save()
 
     def create_account(self):
         ''' Create the FacebookAccount object for the current user. '''
