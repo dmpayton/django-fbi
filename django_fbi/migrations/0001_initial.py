@@ -12,11 +12,11 @@ class Migration(SchemaMigration):
         db.create_table('django_fbi_facebookaccount', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.OneToOneField')(blank=True, related_name='facebook', unique=True, null=True, to=orm['auth.User'])),
-            ('facebook_id', self.gf('django.db.models.fields.BigIntegerField')(unique=True)),
+            ('facebook_id', self.gf('django.db.models.fields.BigIntegerField')(unique=True, db_index=True)),
             ('facebook_email', self.gf('django.db.models.fields.EmailField')(max_length=255, null=True, blank=True)),
-            ('connected', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('access_token', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('api_data', self.gf('django.db.models.fields.TextField')()),
+            ('expires', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
+            ('profile_data', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
         ))
         db.send_create_signal('django_fbi', ['FacebookAccount'])
 
@@ -24,10 +24,8 @@ class Migration(SchemaMigration):
         db.create_table('django_fbi_facebookapp', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('namespace', self.gf('django.db.models.fields.SlugField')(max_length=255, db_index=True)),
-            ('connect', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('app_id', self.gf('django.db.models.fields.CharField')(max_length=20)),
             ('app_secret', self.gf('django.db.models.fields.CharField')(max_length=32)),
-            ('permissions', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('canvas_template', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('canvas_content', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('tab_template', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
@@ -85,11 +83,11 @@ class Migration(SchemaMigration):
         'django_fbi.facebookaccount': {
             'Meta': {'ordering': "('user',)", 'object_name': 'FacebookAccount'},
             'access_token': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'api_data': ('django.db.models.fields.TextField', [], {}),
-            'connected': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'expires': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'facebook_email': ('django.db.models.fields.EmailField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'facebook_id': ('django.db.models.fields.BigIntegerField', [], {'unique': 'True'}),
+            'facebook_id': ('django.db.models.fields.BigIntegerField', [], {'unique': 'True', 'db_index': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'profile_data': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'blank': 'True', 'related_name': "'facebook'", 'unique': 'True', 'null': 'True', 'to': "orm['auth.User']"})
         },
         'django_fbi.facebookapp': {
@@ -98,10 +96,8 @@ class Migration(SchemaMigration):
             'app_secret': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
             'canvas_content': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'canvas_template': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'connect': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'namespace': ('django.db.models.fields.SlugField', [], {'max_length': '255', 'db_index': 'True'}),
-            'permissions': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'tab_content': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'tab_template': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'})
         }
