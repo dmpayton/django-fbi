@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpResponse
 from django_fbi.utils import get_facebook_settings
 from registration.backends import get_backend
 
@@ -11,3 +12,6 @@ def fbi_context(request):
 def connect(request):
     facebook_backend = get_backend(FBI_BACKEND)
     return facebook_backend.connect(request)
+
+def channel(request):
+    return HttpResponse('<script src="//connect.facebook.net/en_US/all.js"></script>')
